@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - BROWN'S KITCHEN</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        .admin-page {
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+
+        .admin-login {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(255, 107, 53, 0.15);
+        }
+
+        .admin-login h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--dark);
+        }
+
+        .admin-login .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-login label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-login input {
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid var(--light);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .admin-login input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .admin-login .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .admin-dashboard {
+            display: none;
+        }
+
+        .admin-dashboard.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgb(77, 69, 69);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .orders-table {
+            background: rgb(77, 69, 69);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(255, 107, 53, 0.1);
+            overflow-x: auto;
+        }
+
+        .orders-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .orders-table th {
+            text-align: left;
+            padding: 0.8rem;
+            border-bottom: 2px solid var(--light);
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .orders-table td {
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .orders-table tr:hover {
+            background: #f9f9f942;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #FFF3CD; color: #856404; }
+        .status-payment_received { background: #D1ECF1; color: #0C5460; }
+        .status-preparing { background: #D4EDDA; color: #155724; }
+        .status-ready { background: #C3E6CB; color: #0B5E2E; }
+        .status-out_for_delivery { background: #D6D8DB; color: #1B1E21; }
+        .status-delivered { background: #28A745; color: white; }
+        .status-cancelled { background: #F8D7DA; color: #721C24; }
+
+        .status-select {
+            padding: 0.3rem 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-header h2 {
+            margin: 0;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .no-orders {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .confirm-payment-btn {
+            background: #28A745;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+            margin-top: 0.3rem;
+        }
+
+        .confirm-payment-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #28a745;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Admin Notification */
+        .admin-notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-weight: 600;
+            border-left: 4px solid #28a745;
+            transition: all 0.4s;
+            transform: translateX(120%);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .admin-notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .admin-page { padding-top: 80px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .orders-table { font-size: 0.8rem; padding: 0.8rem; }
+            .orders-table th, .orders-table td { padding: 0.5rem; }
+            .admin-actions { flex-direction: column; align-items: stretch; }
+        }
+
+        /* Delete Order Button */
+.delete-order-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+    margin-top: 0.3rem;
+    width: 100%;
+}
+
+.delete-order-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+/* Action Cell */
+.action-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 140px;
+}
+
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pending { background: #FFF3CD; color: #856404; }
+.status-payment_received { background: #D1ECF1; color: #0C5460; }
+.status-preparing { background: #D4EDDA; color: #155724; }
+.status-ready { background: #C3E6CB; color: #0B5E2E; }
+.status-out_for_delivery { background: #D6D8DB; color: #1B1E21; }
+.status-delivered { background: #28A745; color: white; }
+.status-cancelled { background: #F8D7DA; color: #721C24; }
+
+.confirm-payment-btn {
+    background: #28A745;
+    color: white;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.confirm-payment-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* Admin Notification */
+.admin-notification {
+    position: fixed;
+    top: 100px;
+    right: 30px;
+    background: var(--dark-surface);
+    color: var(--white);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    font-weight: 600;
+    border-left: 4px solid #2ED573;
+    transition: all 0.4s;
+    transform: translateX(120%);
+    font-family: 'Poppins', sans-serif;
+    max-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-notification.show {
+    transform: translateX(0);
+}
+    </style>
+</head>
+<body>
+
+    <!-- BLOBS -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- HEADER -->
+    <header>
+        <a href="index.html" class="logo">
+            <i class="fas fa-utensils"></i>
+            BROWN'S KITCHEN
+        </a>
+        <ul class="nav-links" id="navLinks">
+            <div class="nav-indicator"></div>
+            <li><a href="index.html#home">Home</a></li>
+            <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#delivery">Delivery</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li><a href="orders.html">Orders</a></li>
+            <li><a href="admin.html" class="active-link">Admin</a></li>
+        </ul>
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <!-- ADMIN PAGE -->
+    <section class="admin-page">
+        <div class="container">
+
+            <!-- LOGIN SECTION -->
+            <div class="admin-login" id="adminLogin">
+                <h2><i class="fas fa-lock"></i> Admin Login</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="adminEmail" placeholder="brown@brownskitchen.com" value="brown@brownskitchen.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="adminPassword" placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                <p style="text-align:center;margin-top:1rem;color:#999;font-size:0.8rem;">
+                    Default: brown@brownskitchen.com / admin123
+                </p>
+            </div>
+
+            <!-- DASHBOARD SECTION -->
+            <div class="admin-dashboard" id="adminDashboard">
+                <div class="admin-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                    <div class="admin-actions">
+                        <span style="display:flex;align-items:center;font-size:0.9rem;color:#666;">
+                            <span class="live-indicator"></span> Live
+                        </span>
+                        <button class="refresh-btn" onclick="loadOrders()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                        <button class="logout-btn" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="number" id="totalOrders">0</div>
+                        <div class="label">Total Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="pendingOrders">0</div>
+                        <div class="label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="revenueOrders">GH₵ 0</div>
+                        <div class="label">Revenue</div>
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="orders-table">
+                    <h3 style="margin-bottom:1rem;"><i class="fas fa-list"></i> All Orders</h3>
+                    <div id="ordersList">
+                        <div class="no-orders">Loading orders...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <a href="index.html" class="logo">
+            <i class="fas fa-utensils"></i>
+            Brown's Kitchen
+        </a>
+        <p>&copy; 2026 Brown's Kitchen. All Rights Reserved. | Bomso Branch, Kumasi.</p>
+    </footer>
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
