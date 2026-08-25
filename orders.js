@@ -1,5 +1,5 @@
 // ============================================
-// CART PERSISTENCE - FIXED
+// CART PERSISTENCE
 // ============================================
 const CART_STORAGE_KEY = 'wings_nlicks_cart';
 const DELIVERY_FEES = {
@@ -166,7 +166,6 @@ function changeQty(id, change) {
     if (!btn) return;
     
     if (val === 0) {
-        // Remove from cart if quantity is 0
         cart = cart.filter(item => item.id !== id);
         saveCartToStorage();
         btn.innerHTML = '<i class="fas fa-plus"></i> Add';
@@ -182,14 +181,13 @@ function changeQty(id, change) {
 }
 
 // ============================================
-// ADD TO CART - FIXED
+// ADD TO CART
 // ============================================
 function addToCart(id) {
     const qtyEl = document.getElementById(`qty-${id}`);
     if (!qtyEl) return;
     let qty = parseInt(qtyEl.textContent);
     
-    // If quantity is 0, set to 1
     if (qty === 0) {
         qty = 1;
         qtyEl.textContent = '1';
@@ -217,7 +215,7 @@ function addToCart(id) {
 }
 
 // ============================================
-// UPDATE CART UI - FIXED
+// UPDATE CART UI
 // ============================================
 function updateCartUI() {
     const itemsEl = document.getElementById('cartItems');
@@ -271,18 +269,15 @@ function updateCartUI() {
 }
 
 // ============================================
-// REMOVE FROM CART - FIXED (WORKS NOW)
+// REMOVE FROM CART
 // ============================================
 function removeFromCart(id) {
-    // Remove the item from cart array
     cart = cart.filter(item => item.id !== id);
     saveCartToStorage();
     
-    // Reset the quantity display
     const qtyEl = document.getElementById(`qty-${id}`);
     if (qtyEl) qtyEl.textContent = '0';
     
-    // Reset the button to "Add"
     const btn = document.getElementById(`addBtn-${id}`);
     if (btn) {
         btn.innerHTML = '<i class="fas fa-plus"></i> Add';
@@ -385,10 +380,11 @@ function generateOrderReference() {
 }
 
 // ============================================
-// SEND WHATSAPP CONFIRMATIONS
+// SEND WHATSAPP CONFIRMATIONS (ONLY AFTER PAYMENT)
 // ============================================
-function sendWhatsAppConfirmations(orderData, paymentStatus = 'pending') {
-    const customerMsg = paymentStatus === 'paid' ? `
+function sendWhatsAppConfirmations(orderData) {
+    // Customer receipt - ONLY sent after successful payment
+    const customerMsg = `
 ✅ PAYMENT CONFIRMED - WINGS "N" LICKS
 ━━━━━━━━━━━━━━━━━━━━━
 Reference: ${orderData.reference}
@@ -402,35 +398,16 @@ Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
 Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
 
-💰 Payment confirmed!
+💰 Payment confirmed via Paystack!
 
 👨‍🍳 We're preparing your food.
 🕐 Estimated delivery: 20-25 minutes
 
 Thank you for choosing Wings "N" Licks! 🍗
-    ` : `
-📋 ORDER RECEIVED - WINGS "N" LICKS
-━━━━━━━━━━━━━━━━━━━━━
-Reference: ${orderData.reference}
-Customer: ${orderData.customer.name}
-Location: ${orderData.customer.location}
-
-📋 ORDER SUMMARY:
-${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
-━━━━━━━━━━━━━━━━━━━━━
-Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
-Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
-Total: GH₵ ${orderData.total.toFixed(2)}
-
-💳 Payment: ${orderData.payment.method.toUpperCase()}
-${orderData.payment.method !== 'cash' ? `📱 Pay with: ${orderData.payment.momoNumber}` : '💵 Cash on Delivery'}
-
-${orderData.payment.method !== 'cash' ? '⚠️ Complete payment via MoMo. You\'ll receive a USSD push on your phone.' : '💵 Please have cash ready upon delivery.'}
-
-Thank you for choosing Wings "N" Licks! 🍗
     `;
 
-    const adminMsg = paymentStatus === 'paid' ? `
+    // Admin notification
+    const adminMsg = `
 ✅ PAYMENT CONFIRMED - WINGS "N" LICKS
 ━━━━━━━━━━━━━━━━━━━━━
 Order Ref: ${orderData.reference}
@@ -438,7 +415,7 @@ Customer: ${orderData.customer.name}
 Phone: ${orderData.customer.phone}
 Location: ${orderData.customer.location}
 
-💰 Payment confirmed!
+💰 Payment confirmed via Paystack!
 Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
 Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
@@ -448,34 +425,17 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
 ━━━━━━━━━━━━━━━━━━━━━
 
 ✅ Start preparing the food!
-    ` : `
-📦 NEW ORDER - ${orderData.payment.method === 'cash' ? 'CASH ON DELIVERY' : 'AWAITING PAYMENT!'}
-━━━━━━━━━━━━━━━━━━━━━
-Order Ref: ${orderData.reference}
-Customer: ${orderData.customer.name}
-Phone: ${orderData.customer.phone}
-Location: ${orderData.customer.location}
-
-💳 Payment: ${orderData.payment.method.toUpperCase()}
-${orderData.payment.method !== 'cash' ? `📱 MoMo Number: ${orderData.payment.momoNumber}` : '💵 Cash on Delivery'}
-Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
-Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
-Total: GH₵ ${orderData.total.toFixed(2)}
-
-📋 ITEMS:
-${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
-━━━━━━━━━━━━━━━━━━━━━
-
-${orderData.payment.method !== 'cash' ? '⚠️ Confirm payment has been received.' : '⚠️ Prepare food for delivery.'}
     `;
 
     const customerPhone = orderData.customer.phone.replace(/^0/, '');
     const adminPhone = '593952002';
 
+    // Send to customer
     setTimeout(() => {
         window.open(`https://wa.me/233${customerPhone}?text=${encodeURIComponent(customerMsg)}`, '_blank');
     }, 500);
 
+    // Send to admin
     setTimeout(() => {
         window.open(`https://wa.me/233${adminPhone}?text=${encodeURIComponent(adminMsg)}`, '_blank');
     }, 1000);
@@ -484,9 +444,8 @@ ${orderData.payment.method !== 'cash' ? '⚠️ Confirm payment has been receive
 // ============================================
 // SHOW ORDER CONFIRMATION
 // ============================================
-function showOrderConfirmation(orderData, paymentStatus = 'pending') {
+function showOrderConfirmation(orderData) {
     const details = document.getElementById('orderDetails');
-    const isPaid = paymentStatus === 'paid';
     
     details.innerHTML = `
         <p><strong>Reference:</strong> ${orderData.reference}</p>
@@ -501,13 +460,15 @@ function showOrderConfirmation(orderData, paymentStatus = 'pending') {
         <p><strong>Items Ordered:</strong></p>
         ${orderData.items.map(i => `<p style="font-size:0.9rem;">• ${i.name} × ${i.quantity} = GH₵ ${(i.price * i.quantity).toFixed(2)}</p>`).join('')}
         <hr>
-        <div style="background:${isPaid ? '#1A3A2E' : '#1A1A2E'};padding:1rem;border-radius:8px;border-left:4px solid ${isPaid ? '#2ED573' : '#FFD700'};">
-            <p style="margin:0;color:${isPaid ? '#2ED573' : '#FFD700'};">
-                ${isPaid ? '✅ Payment Confirmed!' : '⏳ Order Received!'}
+        <div style="background:#1A3A2E;padding:1rem;border-radius:8px;border-left:4px solid #2ED573;">
+            <p style="margin:0;color:#2ED573;">
+                ✅ Payment Confirmed!
                 <br>
-                ${isPaid ? 'Your payment has been confirmed. We\'re preparing your food.' : (orderData.payment.method === 'cash' ? '💵 Cash on Delivery - Please have cash ready.' : 'Please complete payment on your phone via MoMo.')}
+                Your payment has been confirmed. We're preparing your food.
                 <br><br>
                 🕐 Estimated delivery: 20-25 minutes
+                <br>
+                📱 A WhatsApp receipt has been sent to your phone.
             </p>
         </div>
     `;
@@ -523,7 +484,7 @@ function showOrderConfirmation(orderData, paymentStatus = 'pending') {
 }
 
 // ============================================
-// PAYMENT FORM SUBMISSION
+// PAYMENT FORM SUBMISSION - FIXED (PAY FIRST, THEN RECEIPT)
 // ============================================
 document.getElementById('paymentForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -575,7 +536,9 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         return;
     }
 
-    // Cash on Delivery
+    // ============================================
+    // CASH ON DELIVERY - Different flow
+    // ============================================
     if (method && method.value === 'cash') {
         const submitBtn = document.querySelector('.payment-submit');
         const originalText = submitBtn.innerHTML;
@@ -583,11 +546,66 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         submitBtn.disabled = true;
 
         try {
+            // Save order to database
             const result = await saveOrderToSupabase(orderData);
             if (!result.success) throw new Error('Failed to save order');
             
-            sendWhatsAppConfirmations(orderData, 'pending');
-            showOrderConfirmation(orderData, 'pending');
+            // For Cash on Delivery: Send confirmation immediately (no payment needed)
+            const customerMsg = `
+📋 ORDER CONFIRMED - WINGS "N" LICKS
+━━━━━━━━━━━━━━━━━━━━━
+Reference: ${orderData.reference}
+Customer: ${orderData.customer.name}
+Location: ${orderData.customer.location}
+
+📋 ORDER SUMMARY:
+${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
+Total: GH₵ ${orderData.total.toFixed(2)}
+
+💳 Payment: CASH ON DELIVERY
+💵 Please have cash ready upon delivery.
+
+👨‍🍳 We're preparing your food.
+🕐 Estimated delivery: 20-25 minutes
+
+Thank you for choosing Wings "N" Licks! 🍗
+            `;
+
+            const adminMsg = `
+📦 NEW ORDER - CASH ON DELIVERY
+━━━━━━━━━━━━━━━━━━━━━
+Order Ref: ${orderData.reference}
+Customer: ${orderData.customer.name}
+Phone: ${orderData.customer.phone}
+Location: ${orderData.customer.location}
+
+💳 Payment: CASH ON DELIVERY
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
+Total: GH₵ ${orderData.total.toFixed(2)}
+
+📋 ITEMS:
+${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ Prepare food for delivery.
+            `;
+
+            const customerPhone = orderData.customer.phone.replace(/^0/, '');
+            const adminPhone = '593952002';
+
+            setTimeout(() => {
+                window.open(`https://wa.me/233${customerPhone}?text=${encodeURIComponent(customerMsg)}`, '_blank');
+            }, 500);
+
+            setTimeout(() => {
+                window.open(`https://wa.me/233${adminPhone}?text=${encodeURIComponent(adminMsg)}`, '_blank');
+            }, 1000);
+
+            showOrderConfirmation(orderData);
             
             cart = [];
             saveCartToStorage();
@@ -609,23 +627,26 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         return;
     }
 
-    // MoMo Payment
+    // ============================================
+    // MOMO PAYMENT - PAY FIRST, THEN RECEIPT
+    // ============================================
     const submitBtn = document.querySelector('.payment-submit');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     submitBtn.disabled = true;
 
     try {
+        // Save order to database FIRST with status 'pending'
         const result = await saveOrderToSupabase(orderData);
         if (!result.success) throw new Error('Failed to save order');
         
         const orderId = result.data[0].id;
-        sendWhatsAppConfirmations(orderData, 'pending');
 
         if (typeof PaystackPop === 'undefined') {
             throw new Error('Payment service not available. Please try Cash on Delivery.');
         }
 
+        // Open Paystack payment popup
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY,
             email: `${orderData.customer.name.replace(/\s/g, '').toLowerCase()}@customer.com`,
@@ -640,29 +661,44 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                 ]
             },
             channels: ['mobile_money'],
-            callback: function(response) {
+            callback: async function(response) {
                 console.log('✅ Paystack callback:', response);
-                updateOrderStatus(orderId, 'payment_received')
-                    .then(() => {
-                        sendWhatsAppConfirmations(orderData, 'paid');
-                        showOrderConfirmation(orderData, 'paid');
-                        cart = [];
-                        saveCartToStorage();
-                        updateCartUI();
-                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
-                        submitBtn.style.background = 'var(--fresh)';
-                        setTimeout(() => {
-                            submitBtn.innerHTML = originalText;
-                            submitBtn.disabled = false;
-                            submitBtn.style.background = '';
-                        }, 3000);
-                    })
-                    .catch((err) => console.error('❌ Error updating order:', err));
+                
+                try {
+                    // Update order status to 'payment_received'
+                    await updateOrderStatus(orderId, 'payment_received');
+                    
+                    // ONLY NOW send WhatsApp receipt (after payment confirmed)
+                    sendWhatsAppConfirmations(orderData);
+                    
+                    // Show confirmation on screen
+                    showOrderConfirmation(orderData);
+                    
+                    // Clear cart
+                    cart = [];
+                    saveCartToStorage();
+                    updateCartUI();
+                    
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
+                    submitBtn.style.background = 'var(--fresh)';
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        submitBtn.style.background = '';
+                    }, 3000);
+                } catch (err) {
+                    console.error('❌ Error updating order:', err);
+                    alert('Payment was successful but we had trouble confirming your order. Please contact us.');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             },
             onClose: function() {
                 console.log('⚠️ Paystack popup closed');
+                // Don't clear cart or send receipt - payment wasn't completed
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+                alert('Payment was not completed. Your cart has been saved. You can try again.');
             }
         });
         
@@ -684,7 +720,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     renderCategories();
     
-    // Load menu from database
     const items = await loadMenuFromDatabase();
     if (items.length > 0) {
         menuItems = items;
@@ -702,3 +737,4 @@ document.addEventListener('DOMContentLoaded', async function() {
 console.log('✅ Wings "N" Licks - Order system loaded!');
 console.log('🔥 Spicy. Crispy. Addictive.');
 console.log('💳 Paystack MoMo is active!');
+console.log('📱 WhatsApp receipt sent ONLY after successful payment!');
