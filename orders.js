@@ -1,5 +1,5 @@
 // ============================================
-// CART PERSISTENCE
+// CART PERSISTENCE - FIXED
 // ============================================
 const CART_STORAGE_KEY = 'wings_nlicks_cart';
 const DELIVERY_FEES = {
@@ -40,10 +40,9 @@ function getCartTotal(location = '') {
 cart = readCartFromStorage();
 
 // ============================================
-// PAYSTACK CONFIGURATION - LIVE MODE (FIXED)
+// PAYSTACK CONFIGURATION - LIVE MODE
 // ============================================
 const PAYSTACK_PUBLIC_KEY = 'pk_live_800c0844901ba454e4336b59ed87c09378c76f04';
-// SUBACCOUNT REMOVED - Use main account directly
 
 // ============================================
 // FETCH MENU FROM SUPABASE
@@ -74,12 +73,12 @@ async function loadMenuFromDatabase() {
 // ============================================
 function renderMenu(category = 'all') {
     const grid = document.getElementById('menuGrid');
-
+    
     if (!grid) {
         console.warn('⚠️ menuGrid not found');
         return;
     }
-
+    
     if (!menuItems || menuItems.length === 0) {
         grid.innerHTML = `<p class="empty-cart" style="color:var(--gray);text-align:center;padding:3rem;">Loading menu...</p>`;
         return;
@@ -97,7 +96,7 @@ function renderMenu(category = 'all') {
         const cartItem = cart.find(i => i.id === item.id);
         const qty = cartItem ? cartItem.quantity : 0;
         const isAdded = cartItem ? true : false;
-
+        
         return `
         <div class="menu-item">
             <img src="${item.image || 'https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'}" class="menu-item-image" onerror="this.src='https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'">
@@ -112,7 +111,7 @@ function renderMenu(category = 'all') {
                         <span class="quantity-value" id="qty-${item.id}">${qty}</span>
                         <button class="quantity-btn" onclick="changeQty(${itemId}, 1)">+</button>
                     </div>
-                    <button class="add-to-cart" onclick="addToCart(${itemId})" id="addBtn-${item.id}">
+                    <button class="add-to-cart" onclick="addToCart(${itemId})" id="addBtn-${item.id}" style="${isAdded ? 'background: var(--fresh);' : ''}">
                         ${isAdded ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-plus"></i> Add'}
                     </button>
                 </div>
@@ -136,7 +135,7 @@ const categories = [
 function renderCategories() {
     const container = document.querySelector('.menu-categories');
     if (!container) return;
-
+    
     container.innerHTML = categories.map(cat => `
         <button class="category-btn ${cat.id === 'all' ? 'active' : ''}" data-category="${cat.id}">
             <i class="fas ${cat.icon}"></i> ${cat.label}
@@ -144,7 +143,7 @@ function renderCategories() {
     `).join('');
 
     container.querySelectorAll('.category-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function() {
             container.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             renderMenu(this.dataset.category);
@@ -161,46 +160,45 @@ function changeQty(id, change) {
     let val = parseInt(el.textContent) + change;
     if (val < 0) val = 0;
     el.textContent = val;
-
+    
     const inCart = cart.find(i => i.id === id);
     const btn = document.getElementById(`addBtn-${id}`);
     if (!btn) return;
-
-    if (!inCart) {
-        if (val > 0) {
-            btn.innerHTML = '<i class="fas fa-plus"></i> Add';
-            btn.style.background = 'var(--gradient-primary)';
-        } else {
-            btn.innerHTML = '<i class="fas fa-plus"></i> Add';
-            btn.style.background = '';
-        }
+    
+    if (val === 0) {
+        // Remove from cart if quantity is 0
+        cart = cart.filter(item => item.id !== id);
+        saveCartToStorage();
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add';
+        btn.style.background = '';
+        updateCartUI();
+    } else if (inCart) {
+        inCart.quantity = val;
+        saveCartToStorage();
+        btn.innerHTML = '<i class="fas fa-check"></i> Added';
+        btn.style.background = 'var(--fresh)';
+        updateCartUI();
     }
 }
 
 // ============================================
-// ADD TO CART
+// ADD TO CART - FIXED
 // ============================================
 function addToCart(id) {
     const qtyEl = document.getElementById(`qty-${id}`);
     if (!qtyEl) return;
-    const qty = parseInt(qtyEl.textContent);
-
+    let qty = parseInt(qtyEl.textContent);
+    
+    // If quantity is 0, set to 1
     if (qty === 0) {
-        cart = cart.filter(item => item.id !== id);
-        const btn = document.getElementById(`addBtn-${id}`);
-        if (btn) {
-            btn.innerHTML = '<i class="fas fa-plus"></i> Add';
-            btn.style.background = '';
-        }
-        saveCartToStorage();
-        updateCartUI();
-        return;
+        qty = 1;
+        qtyEl.textContent = '1';
     }
 
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
     const existing = cart.find(i => i.id === id);
-
+    
     if (existing) {
         existing.quantity = qty;
     } else {
@@ -219,7 +217,7 @@ function addToCart(id) {
 }
 
 // ============================================
-// UPDATE CART UI
+// UPDATE CART UI - FIXED
 // ============================================
 function updateCartUI() {
     const itemsEl = document.getElementById('cartItems');
@@ -249,15 +247,15 @@ function updateCartUI() {
     if (itemsEl) {
         itemsEl.innerHTML = cart.map(item => `
             <div class="cart-item">
-                <div>
-                    <strong style="color:var(--white);">${item.name}</strong>
-                    <span style="color:var(--primary);margin-left:1rem;">GH₵ ${item.price} × ${item.quantity}</span>
+                <div style="flex:1;min-width:100px;">
+                    <strong style="color:var(--white);font-size:0.9rem;">${item.name}</strong>
+                    <span style="color:var(--primary);margin-left:0.8rem;font-size:0.85rem;">GH₵ ${item.price} × ${item.quantity}</span>
                 </div>
-                <div>
-                    <span style="font-weight:700;color:var(--secondary);margin-right:1rem;">
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span style="font-weight:700;color:var(--secondary);font-size:0.95rem;">
                         GH₵ ${(item.price * item.quantity).toFixed(2)}
                     </span>
-                    <button class="cart-item-remove" onclick="removeFromCart(${item.id})">
+                    <button class="cart-item-remove" onclick="removeFromCart(${item.id})" title="Remove item">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -273,19 +271,26 @@ function updateCartUI() {
 }
 
 // ============================================
-// REMOVE FROM CART
+// REMOVE FROM CART - FIXED (WORKS NOW)
 // ============================================
 function removeFromCart(id) {
+    // Remove the item from cart array
     cart = cart.filter(item => item.id !== id);
     saveCartToStorage();
+    
+    // Reset the quantity display
     const qtyEl = document.getElementById(`qty-${id}`);
     if (qtyEl) qtyEl.textContent = '0';
+    
+    // Reset the button to "Add"
     const btn = document.getElementById(`addBtn-${id}`);
     if (btn) {
         btn.innerHTML = '<i class="fas fa-plus"></i> Add';
         btn.style.background = '';
     }
+    
     updateCartUI();
+    showNotification('Item removed from cart');
 }
 
 // ============================================
@@ -323,20 +328,20 @@ function showNotification(msg) {
     }
     n.textContent = msg;
     n.classList.add('show');
-    setTimeout(() => n.classList.remove('show'), 2000);
+    setTimeout(() => n.classList.remove('show'), 2500);
 }
 
 // ============================================
 // CHECKOUT
 // ============================================
-document.getElementById('checkoutBtn')?.addEventListener('click', function () {
+document.getElementById('checkoutBtn')?.addEventListener('click', function() {
     if (cart.length === 0) return;
-
+    
     const steps = document.querySelectorAll('.step');
     steps.forEach((el, index) => {
         if (index === 2) el.classList.add('active');
     });
-
+    
     document.getElementById('paymentSection')?.classList.add('active');
     document.getElementById('cartSection').style.display = 'none';
     document.getElementById('paymentSection')?.scrollIntoView({ behavior: 'smooth' });
@@ -346,11 +351,11 @@ document.getElementById('checkoutBtn')?.addEventListener('click', function () {
 // PAYMENT
 // ============================================
 document.querySelectorAll('.payment-method')?.forEach(el => {
-    el.addEventListener('click', function () {
+    el.addEventListener('click', function() {
         document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
         this.classList.add('selected');
         this.querySelector('input').checked = true;
-
+        
         const momoGroup = document.getElementById('momoGroup');
         if (this.dataset.method === 'cash') {
             if (momoGroup) momoGroup.style.display = 'none';
@@ -360,7 +365,7 @@ document.querySelectorAll('.payment-method')?.forEach(el => {
     });
 });
 
-document.getElementById('deliveryLocation')?.addEventListener('change', function () {
+document.getElementById('deliveryLocation')?.addEventListener('change', function() {
     const otherLocationGroup = document.getElementById('otherLocationGroup');
     if (otherLocationGroup) otherLocationGroup.style.display = this.value === 'Other' ? 'block' : 'none';
     updateCartUI();
@@ -372,9 +377,9 @@ document.getElementById('deliveryLocation')?.addEventListener('change', function
 function generateOrderReference() {
     const prefix = 'WL';
     const date = new Date();
-    const dateStr = date.getFullYear() +
-        String(date.getMonth() + 1).padStart(2, '0') +
-        String(date.getDate()).padStart(2, '0');
+    const dateStr = date.getFullYear() + 
+                   String(date.getMonth() + 1).padStart(2, '0') + 
+                   String(date.getDate()).padStart(2, '0');
     const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
     return `${prefix}-${dateStr}-${random}`;
 }
@@ -482,7 +487,7 @@ ${orderData.payment.method !== 'cash' ? '⚠️ Confirm payment has been receive
 function showOrderConfirmation(orderData, paymentStatus = 'pending') {
     const details = document.getElementById('orderDetails');
     const isPaid = paymentStatus === 'paid';
-
+    
     details.innerHTML = `
         <p><strong>Reference:</strong> ${orderData.reference}</p>
         <p><strong>Customer:</strong> ${orderData.customer.name}</p>
@@ -511,18 +516,18 @@ function showOrderConfirmation(orderData, paymentStatus = 'pending') {
     steps.forEach((el, index) => {
         if (index === 3) el.classList.add('active');
     });
-
+    
     document.getElementById('paymentSection').classList.remove('active');
     document.getElementById('confirmationSection').classList.add('active');
     document.getElementById('confirmationSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ============================================
-// PAYMENT FORM SUBMISSION (FIXED)
+// PAYMENT FORM SUBMISSION
 // ============================================
-document.getElementById('paymentForm')?.addEventListener('submit', async function (e) {
+document.getElementById('paymentForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-
+    
     const name = document.getElementById('customerName').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
     const location = document.getElementById('deliveryLocation').value;
@@ -546,20 +551,20 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
 
     const orderData = {
         reference: ref,
-        customer: {
-            name: name,
-            phone: phone,
-            location: location === 'Other' ? other : location
+        customer: { 
+            name: name, 
+            phone: phone, 
+            location: location === 'Other' ? other : location 
         },
-        items: cart.map(i => ({
-            name: i.name,
-            quantity: i.quantity,
-            price: i.price
+        items: cart.map(i => ({ 
+            name: i.name, 
+            quantity: i.quantity, 
+            price: i.price 
         })),
         total: total,
         deliveryFee: deliveryFee,
-        payment: {
-            method: method ? method.value : 'mtn',
+        payment: { 
+            method: method ? method.value : 'mtn', 
             momoNumber: method && method.value === 'cash' ? 'Cash on Delivery' : momo
         },
         time: new Date().toLocaleString()
@@ -580,10 +585,10 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         try {
             const result = await saveOrderToSupabase(orderData);
             if (!result.success) throw new Error('Failed to save order');
-
+            
             sendWhatsAppConfirmations(orderData, 'pending');
             showOrderConfirmation(orderData, 'pending');
-
+            
             cart = [];
             saveCartToStorage();
             updateCartUI();
@@ -613,7 +618,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
     try {
         const result = await saveOrderToSupabase(orderData);
         if (!result.success) throw new Error('Failed to save order');
-
+        
         const orderId = result.data[0].id;
         sendWhatsAppConfirmations(orderData, 'pending');
 
@@ -634,9 +639,8 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                     { display_name: "Location", variable_name: "location", value: orderData.customer.location }
                 ]
             },
-            // SUBACCOUNT REMOVED - Using main account directly
             channels: ['mobile_money'],
-            callback: function (response) {
+            callback: function(response) {
                 console.log('✅ Paystack callback:', response);
                 updateOrderStatus(orderId, 'payment_received')
                     .then(() => {
@@ -655,13 +659,13 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                     })
                     .catch((err) => console.error('❌ Error updating order:', err));
             },
-            onClose: function () {
+            onClose: function() {
                 console.log('⚠️ Paystack popup closed');
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
-
+        
         handler.openIframe();
 
     } catch (error) {
@@ -675,11 +679,11 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', async function () {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('🔵 Initializing orders page...');
-
+    
     renderCategories();
-
+    
     // Load menu from database
     const items = await loadMenuFromDatabase();
     if (items.length > 0) {
@@ -687,10 +691,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     } else {
         console.warn('⚠️ No menu items found, using fallback data');
     }
-
+    
     renderMenu();
     updateCartUI();
-
+    
     const momoGroup = document.getElementById('momoGroup');
     if (momoGroup) momoGroup.style.display = 'block';
 });

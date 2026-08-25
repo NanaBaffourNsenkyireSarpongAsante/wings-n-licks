@@ -462,7 +462,7 @@ section {
 }
 
 /* ============================================
-   HERO SECTION
+   HERO SECTION - FIXED FOR MOBILE
    ============================================ */
 .hero {
     min-height: 100vh;
@@ -587,6 +587,9 @@ section {
     background: linear-gradient(to top, rgba(13, 13, 13, 0.6), transparent);
 }
 
+/* ============================================
+   HERO BADGES - FIXED TO SHOW ON ALL DEVICES
+   ============================================ */
 .hero-badge {
     position: absolute;
     background: rgba(13, 13, 13, 0.9);
@@ -598,6 +601,8 @@ section {
     align-items: center;
     gap: 0.8rem;
     animation: floatBadge 4s ease-in-out infinite;
+    z-index: 2;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .hero-badge-1 {
@@ -664,19 +669,13 @@ section {
     display: flex;
     align-items: center;
     background-image:
-        /* A strong dark gradient for readability */
         linear-gradient(135deg, rgba(17, 12, 10, 0.92) 0%, rgba(17, 12, 10, 0.6) 80%),
-        /* A single, high-quality hero image */
         url('https://i.pinimg.com/736x/a2/bf/1e/a2bf1e3dde0bc6a0af4bffc953d4bbe4.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-    background-attachment: fixed; /* This is the "super" effect */
+    background-attachment: fixed;
     box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.4);
-}
-@keyframes menuPan {
-    0% { background-position: 10% center; }
-    100% { background-position: 90% center; }
 }
 
 .menu-preview::before {
@@ -950,7 +949,7 @@ footer {
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE - FULLY MATCHES LAPTOP DISPLAY
    ============================================ */
 @media (max-width: 1024px) {
     .hero-content {
@@ -972,6 +971,19 @@ footer {
 
     .hero-image-wrapper {
         height: 350px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Hero badges - repositioned but still visible */
+    .hero-badge-1 {
+        top: 15%;
+        left: 10%;
+    }
+    
+    .hero-badge-2 {
+        bottom: 15%;
+        right: 10%;
     }
 }
 
@@ -1034,14 +1046,45 @@ footer {
 
     .hero-image-wrapper {
         height: 280px;
+        max-width: 100%;
     }
 
+    /* ============================================
+       HERO BADGES - SHOW ON MOBILE (FIXED)
+       ============================================ */
     .hero-badge {
-        display: none;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        gap: 0.5rem;
+    }
+
+    .hero-badge i {
+        font-size: 1rem;
+    }
+
+    .hero-badge .badge-text {
+        font-size: 0.7rem;
+    }
+
+    .hero-badge .badge-sub {
+        font-size: 0.6rem;
+    }
+
+    .hero-badge-1 {
+        top: 10%;
+        left: 5%;
+        animation-delay: 0s;
+    }
+
+    .hero-badge-2 {
+        bottom: 10%;
+        right: 5%;
+        animation-delay: -2s;
     }
 
     .hero-stats {
         gap: 2rem;
+        flex-wrap: wrap;
     }
 
     .hero-stats .stat-number {
@@ -1050,10 +1093,6 @@ footer {
 
     section {
         padding: 4rem 1rem;
-    }
-
-    .menu-preview-grid {
-        grid-template-columns: 1fr 1fr;
     }
 
     .features-grid {
@@ -1071,10 +1110,6 @@ footer {
 }
 
 @media (max-width: 480px) {
-    .menu-preview-grid {
-        grid-template-columns: 1fr;
-    }
-
     .features-grid {
         grid-template-columns: 1fr;
     }
@@ -1087,5 +1122,38 @@ footer {
     .hero-stats {
         flex-wrap: wrap;
         gap: 1.5rem;
+    }
+
+    /* Hero badges - even smaller but still visible */
+    .hero-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        gap: 0.4rem;
+    }
+
+    .hero-badge i {
+        font-size: 0.8rem;
+    }
+
+    .hero-badge .badge-text {
+        font-size: 0.6rem;
+    }
+
+    .hero-badge .badge-sub {
+        font-size: 0.5rem;
+    }
+
+    .hero-badge-1 {
+        top: 8%;
+        left: 3%;
+    }
+
+    .hero-badge-2 {
+        bottom: 8%;
+        right: 3%;
+    }
+
+    .hero-image-wrapper {
+        height: 220px;
     }
 }
