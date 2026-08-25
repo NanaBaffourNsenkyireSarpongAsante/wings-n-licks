@@ -484,7 +484,7 @@ function showOrderConfirmation(orderData) {
 }
 
 // ============================================
-// PAYMENT FORM SUBMISSION - FIXED (PAY FIRST, THEN RECEIPT)
+// PAYMENT FORM SUBMISSION - FIXED Paystack callback
 // ============================================
 document.getElementById('paymentForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -546,11 +546,9 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         submitBtn.disabled = true;
 
         try {
-            // Save order to database
             const result = await saveOrderToSupabase(orderData);
             if (!result.success) throw new Error('Failed to save order');
             
-            // For Cash on Delivery: Send confirmation immediately (no payment needed)
             const customerMsg = `
 📋 ORDER CONFIRMED - WINGS "N" LICKS
 ━━━━━━━━━━━━━━━━━━━━━
@@ -605,7 +603,38 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
                 window.open(`https://wa.me/233${adminPhone}?text=${encodeURIComponent(adminMsg)}`, '_blank');
             }, 1000);
 
-            showOrderConfirmation(orderData);
+            // Show confirmation (modified for cash)
+            const details = document.getElementById('orderDetails');
+            details.innerHTML = `
+                <p><strong>Reference:</strong> ${orderData.reference}</p>
+                <p><strong>Customer:</strong> ${orderData.customer.name}</p>
+                <p><strong>Phone:</strong> ${orderData.customer.phone}</p>
+                <p><strong>Location:</strong> ${orderData.customer.location}</p>
+                <p><strong>Payment:</strong> CASH ON DELIVERY</p>
+                <p><strong>Total:</strong> <span style="color:var(--secondary);font-size:1.2rem;">GH₵ ${orderData.total.toFixed(2)}</span></p>
+                <hr>
+                <p><strong>Items Ordered:</strong></p>
+                ${orderData.items.map(i => `<p style="font-size:0.9rem;">• ${i.name} × ${i.quantity} = GH₵ ${(i.price * i.quantity).toFixed(2)}</p>`).join('')}
+                <hr>
+                <div style="background:#1A1A2E;padding:1rem;border-radius:8px;border-left:4px solid #FFD700;">
+                    <p style="margin:0;color:#FFD700;">
+                        ⏳ Order Received!
+                        <br>
+                        💵 Cash on Delivery - Please have cash ready.
+                        <br><br>
+                        🕐 Estimated delivery: 20-25 minutes
+                    </p>
+                </div>
+            `;
+
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((el, index) => {
+                if (index === 3) el.classList.add('active');
+            });
+            
+            document.getElementById('paymentSection').classList.remove('active');
+            document.getElementById('confirmationSection').classList.add('active');
+            document.getElementById('confirmationSection').scrollIntoView({ behavior: 'smooth' });
             
             cart = [];
             saveCartToStorage();
@@ -628,7 +657,7 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
     }
 
     // ============================================
-    // MOMO PAYMENT - PAY FIRST, THEN RECEIPT
+    // MOMO PAYMENT - FIXED CALLBACK
     // ============================================
     const submitBtn = document.querySelector('.payment-submit');
     const originalText = submitBtn.innerHTML;
@@ -636,7 +665,6 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
     submitBtn.disabled = true;
 
     try {
-        // Save order to database FIRST with status 'pending'
         const result = await saveOrderToSupabase(orderData);
         if (!result.success) throw new Error('Failed to save order');
         
@@ -646,7 +674,43 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
             throw new Error('Payment service not available. Please try Cash on Delivery.');
         }
 
-        // Open Paystack payment popup
+        // Define callback functions BEFORE setting up Paystack
+        const paymentCallback = function(response) {
+            console.log('✅ Paystack callback:', response);
+            
+            // Update order status
+            updateOrderStatus(orderId, 'payment_received')
+                .then(() => {
+                    sendWhatsAppConfirmations(orderData);
+                    showOrderConfirmation(orderData);
+                    cart = [];
+                    saveCartToStorage();
+                    updateCartUI();
+                    
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
+                    submitBtn.style.background = 'var(--fresh)';
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        submitBtn.style.background = '';
+                    }, 3000);
+                })
+                .catch((err) => {
+                    console.error('❌ Error updating order:', err);
+                    alert('Payment was successful but we had trouble confirming your order. Please contact us.');
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+        };
+
+        const paymentOnClose = function() {
+            console.log('⚠️ Paystack popup closed');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            // Don't clear cart - user can try again
+        };
+
+        // Setup Paystack with proper callback functions
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY,
             email: `${orderData.customer.name.replace(/\s/g, '').toLowerCase()}@customer.com`,
@@ -661,45 +725,8 @@ ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${
                 ]
             },
             channels: ['mobile_money'],
-            callback: async function(response) {
-                console.log('✅ Paystack callback:', response);
-                
-                try {
-                    // Update order status to 'payment_received'
-                    await updateOrderStatus(orderId, 'payment_received');
-                    
-                    // ONLY NOW send WhatsApp receipt (after payment confirmed)
-                    sendWhatsAppConfirmations(orderData);
-                    
-                    // Show confirmation on screen
-                    showOrderConfirmation(orderData);
-                    
-                    // Clear cart
-                    cart = [];
-                    saveCartToStorage();
-                    updateCartUI();
-                    
-                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
-                    submitBtn.style.background = 'var(--fresh)';
-                    setTimeout(() => {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                        submitBtn.style.background = '';
-                    }, 3000);
-                } catch (err) {
-                    console.error('❌ Error updating order:', err);
-                    alert('Payment was successful but we had trouble confirming your order. Please contact us.');
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            },
-            onClose: function() {
-                console.log('⚠️ Paystack popup closed');
-                // Don't clear cart or send receipt - payment wasn't completed
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-                alert('Payment was not completed. Your cart has been saved. You can try again.');
-            }
+            callback: paymentCallback,
+            onClose: paymentOnClose
         });
         
         handler.openIframe();
