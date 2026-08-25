@@ -48,8 +48,11 @@ exports.handler = async function(event, context) {
         const response = await new Promise((resolve, reject) => {
             const req = https.request(options, (res) => {
                 let data = '';
+                console.log('📡 Response status:', res.statusCode);
+                console.log('📡 Response headers:', res.headers);
                 res.on('data', (chunk) => { data += chunk; });
                 res.on('end', () => {
+                    console.log('📡 Response body:', data);
                     try {
                         resolve(JSON.parse(data));
                     } catch (e) {
@@ -57,9 +60,14 @@ exports.handler = async function(event, context) {
                     }
                 });
             });
-            req.on('error', reject);
+            req.on('error', (e) => {
+                console.error('❌ Request error:', e);
+                reject(e);
+            });
             req.end();
         });
+
+        console.log('✅ Paystack response:', response);
 
         if (response.status && response.data.status === 'success') {
             return {
@@ -74,7 +82,8 @@ exports.handler = async function(event, context) {
                 statusCode: 400,
                 body: JSON.stringify({
                     success: false,
-                    error: 'Payment verification failed'
+                    error: 'Payment verification failed',
+                    details: response
                 })
             };
         }
@@ -83,7 +92,7 @@ exports.handler = async function(event, context) {
         console.error('❌ Error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal server error' })
+            body: JSON.stringify({ error: 'Internal server error', details: error.message })
         };
     }
 };

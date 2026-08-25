@@ -40,10 +40,10 @@ function getCartTotal(location = '') {
 cart = readCartFromStorage();
 
 // ============================================
-// PAYSTACK CONFIGURATION - LIVE MODE
+// PAYSTACK CONFIGURATION - LIVE MODE (FIXED)
 // ============================================
-const PAYSTACK_PUBLIC_KEY = 'pk_live_800c0844901ba45e4336b59ed87c';
-const PAYSTACK_SUBACCOUNT = 'ACCT_kvhbszzru33dnf2';
+const PAYSTACK_PUBLIC_KEY = 'pk_live_800c0844901ba454e4336b59ed87c09378c76f04';
+// SUBACCOUNT REMOVED - Use main account directly
 
 // ============================================
 // FETCH MENU FROM SUPABASE
@@ -74,12 +74,12 @@ async function loadMenuFromDatabase() {
 // ============================================
 function renderMenu(category = 'all') {
     const grid = document.getElementById('menuGrid');
-    
+
     if (!grid) {
         console.warn('⚠️ menuGrid not found');
         return;
     }
-    
+
     if (!menuItems || menuItems.length === 0) {
         grid.innerHTML = `<p class="empty-cart" style="color:var(--gray);text-align:center;padding:3rem;">Loading menu...</p>`;
         return;
@@ -97,7 +97,7 @@ function renderMenu(category = 'all') {
         const cartItem = cart.find(i => i.id === item.id);
         const qty = cartItem ? cartItem.quantity : 0;
         const isAdded = cartItem ? true : false;
-        
+
         return `
         <div class="menu-item">
             <img src="${item.image || 'https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'}" class="menu-item-image" onerror="this.src='https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'">
@@ -136,7 +136,7 @@ const categories = [
 function renderCategories() {
     const container = document.querySelector('.menu-categories');
     if (!container) return;
-    
+
     container.innerHTML = categories.map(cat => `
         <button class="category-btn ${cat.id === 'all' ? 'active' : ''}" data-category="${cat.id}">
             <i class="fas ${cat.icon}"></i> ${cat.label}
@@ -144,7 +144,7 @@ function renderCategories() {
     `).join('');
 
     container.querySelectorAll('.category-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             container.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             renderMenu(this.dataset.category);
@@ -161,11 +161,11 @@ function changeQty(id, change) {
     let val = parseInt(el.textContent) + change;
     if (val < 0) val = 0;
     el.textContent = val;
-    
+
     const inCart = cart.find(i => i.id === id);
     const btn = document.getElementById(`addBtn-${id}`);
     if (!btn) return;
-    
+
     if (!inCart) {
         if (val > 0) {
             btn.innerHTML = '<i class="fas fa-plus"></i> Add';
@@ -184,7 +184,7 @@ function addToCart(id) {
     const qtyEl = document.getElementById(`qty-${id}`);
     if (!qtyEl) return;
     const qty = parseInt(qtyEl.textContent);
-    
+
     if (qty === 0) {
         cart = cart.filter(item => item.id !== id);
         const btn = document.getElementById(`addBtn-${id}`);
@@ -200,7 +200,7 @@ function addToCart(id) {
     const item = menuItems.find(i => i.id === id);
     if (!item) return;
     const existing = cart.find(i => i.id === id);
-    
+
     if (existing) {
         existing.quantity = qty;
     } else {
@@ -329,14 +329,14 @@ function showNotification(msg) {
 // ============================================
 // CHECKOUT
 // ============================================
-document.getElementById('checkoutBtn')?.addEventListener('click', function() {
+document.getElementById('checkoutBtn')?.addEventListener('click', function () {
     if (cart.length === 0) return;
-    
+
     const steps = document.querySelectorAll('.step');
     steps.forEach((el, index) => {
         if (index === 2) el.classList.add('active');
     });
-    
+
     document.getElementById('paymentSection')?.classList.add('active');
     document.getElementById('cartSection').style.display = 'none';
     document.getElementById('paymentSection')?.scrollIntoView({ behavior: 'smooth' });
@@ -346,11 +346,11 @@ document.getElementById('checkoutBtn')?.addEventListener('click', function() {
 // PAYMENT
 // ============================================
 document.querySelectorAll('.payment-method')?.forEach(el => {
-    el.addEventListener('click', function() {
+    el.addEventListener('click', function () {
         document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
         this.classList.add('selected');
         this.querySelector('input').checked = true;
-        
+
         const momoGroup = document.getElementById('momoGroup');
         if (this.dataset.method === 'cash') {
             if (momoGroup) momoGroup.style.display = 'none';
@@ -360,7 +360,7 @@ document.querySelectorAll('.payment-method')?.forEach(el => {
     });
 });
 
-document.getElementById('deliveryLocation')?.addEventListener('change', function() {
+document.getElementById('deliveryLocation')?.addEventListener('change', function () {
     const otherLocationGroup = document.getElementById('otherLocationGroup');
     if (otherLocationGroup) otherLocationGroup.style.display = this.value === 'Other' ? 'block' : 'none';
     updateCartUI();
@@ -372,9 +372,9 @@ document.getElementById('deliveryLocation')?.addEventListener('change', function
 function generateOrderReference() {
     const prefix = 'WL';
     const date = new Date();
-    const dateStr = date.getFullYear() + 
-                   String(date.getMonth() + 1).padStart(2, '0') + 
-                   String(date.getDate()).padStart(2, '0');
+    const dateStr = date.getFullYear() +
+        String(date.getMonth() + 1).padStart(2, '0') +
+        String(date.getDate()).padStart(2, '0');
     const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
     return `${prefix}-${dateStr}-${random}`;
 }
@@ -482,7 +482,7 @@ ${orderData.payment.method !== 'cash' ? '⚠️ Confirm payment has been receive
 function showOrderConfirmation(orderData, paymentStatus = 'pending') {
     const details = document.getElementById('orderDetails');
     const isPaid = paymentStatus === 'paid';
-    
+
     details.innerHTML = `
         <p><strong>Reference:</strong> ${orderData.reference}</p>
         <p><strong>Customer:</strong> ${orderData.customer.name}</p>
@@ -511,18 +511,18 @@ function showOrderConfirmation(orderData, paymentStatus = 'pending') {
     steps.forEach((el, index) => {
         if (index === 3) el.classList.add('active');
     });
-    
+
     document.getElementById('paymentSection').classList.remove('active');
     document.getElementById('confirmationSection').classList.add('active');
     document.getElementById('confirmationSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 // ============================================
-// PAYMENT FORM SUBMISSION
+// PAYMENT FORM SUBMISSION (FIXED)
 // ============================================
-document.getElementById('paymentForm')?.addEventListener('submit', async function(e) {
+document.getElementById('paymentForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
-    
+
     const name = document.getElementById('customerName').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
     const location = document.getElementById('deliveryLocation').value;
@@ -546,20 +546,20 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
 
     const orderData = {
         reference: ref,
-        customer: { 
-            name: name, 
-            phone: phone, 
-            location: location === 'Other' ? other : location 
+        customer: {
+            name: name,
+            phone: phone,
+            location: location === 'Other' ? other : location
         },
-        items: cart.map(i => ({ 
-            name: i.name, 
-            quantity: i.quantity, 
-            price: i.price 
+        items: cart.map(i => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price
         })),
         total: total,
         deliveryFee: deliveryFee,
-        payment: { 
-            method: method ? method.value : 'mtn', 
+        payment: {
+            method: method ? method.value : 'mtn',
             momoNumber: method && method.value === 'cash' ? 'Cash on Delivery' : momo
         },
         time: new Date().toLocaleString()
@@ -580,10 +580,10 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         try {
             const result = await saveOrderToSupabase(orderData);
             if (!result.success) throw new Error('Failed to save order');
-            
+
             sendWhatsAppConfirmations(orderData, 'pending');
             showOrderConfirmation(orderData, 'pending');
-            
+
             cart = [];
             saveCartToStorage();
             updateCartUI();
@@ -613,7 +613,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
     try {
         const result = await saveOrderToSupabase(orderData);
         if (!result.success) throw new Error('Failed to save order');
-        
+
         const orderId = result.data[0].id;
         sendWhatsAppConfirmations(orderData, 'pending');
 
@@ -634,9 +634,9 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                     { display_name: "Location", variable_name: "location", value: orderData.customer.location }
                 ]
             },
-            subaccount: PAYSTACK_SUBACCOUNT,
+            // SUBACCOUNT REMOVED - Using main account directly
             channels: ['mobile_money'],
-            callback: function(response) {
+            callback: function (response) {
                 console.log('✅ Paystack callback:', response);
                 updateOrderStatus(orderId, 'payment_received')
                     .then(() => {
@@ -655,13 +655,13 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                     })
                     .catch((err) => console.error('❌ Error updating order:', err));
             },
-            onClose: function() {
+            onClose: function () {
                 console.log('⚠️ Paystack popup closed');
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
-        
+
         handler.openIframe();
 
     } catch (error) {
@@ -675,11 +675,11 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     console.log('🔵 Initializing orders page...');
-    
+
     renderCategories();
-    
+
     // Load menu from database
     const items = await loadMenuFromDatabase();
     if (items.length > 0) {
@@ -687,10 +687,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
         console.warn('⚠️ No menu items found, using fallback data');
     }
-    
+
     renderMenu();
     updateCartUI();
-    
+
     const momoGroup = document.getElementById('momoGroup');
     if (momoGroup) momoGroup.style.display = 'block';
 });
