@@ -5,7 +5,7 @@
 const SUPABASE_URL = 'https://zbkbfjvodxtiohhuqxko.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpia2JmanZvZHh0aW9oaHVxeGtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzODg4NjcsImV4cCI6MjA5OTk2NDg2N30.Y-7lMgl3HBDSVA1u2zXDdm_WWCDHNsY-Jsd9uhQIFwE';
 
-console.log('✅ Supabase URL loaded');
+console.log('🔵 Supabase URL loaded');
 
 // Initialize Supabase client
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -47,14 +47,14 @@ async function saveOrderToSupabase(orderData) {
             .select();
 
         if (error) {
-            console.error('❌ Supabase insert error:', error);
+            console.error('❌ Error:', error);
             return { success: false, error: error };
         }
 
-        console.log('✅ Order saved to Supabase:', data);
+        console.log('✅ Saved:', data);
         return { success: true, data: data };
     } catch (error) {
-        console.error('❌ Exception in saveOrderToSupabase:', error);
+        console.error('❌ Exception:', error);
         return { success: false, error: error };
     }
 }
@@ -63,8 +63,6 @@ async function saveOrderToSupabase(orderData) {
 // GET ALL ORDERS
 // ============================================
 async function getAllOrders() {
-    console.log('🔵 getAllOrders called');
-    
     try {
         const { data, error } = await supabaseClient
             .from('orders')
@@ -72,31 +70,21 @@ async function getAllOrders() {
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('❌ Supabase select error:', error);
+            console.error('❌ Error:', error);
             return { success: false, error: error };
         }
 
-        console.log('✅ Orders fetched:', data ? data.length : 0);
         return { success: true, data: data || [] };
     } catch (error) {
-        console.error('❌ Exception in getAllOrders:', error);
+        console.error('❌ Exception:', error);
         return { success: false, error: error };
     }
 }
 
 // ============================================
-// UPDATE ORDER STATUS - FIXED
+// UPDATE ORDER STATUS
 // ============================================
 async function updateOrderStatus(orderId, newStatus) {
-    console.log('🔵 updateOrderStatus called');
-    console.log('🔵 Order ID:', orderId);
-    console.log('🔵 New Status:', newStatus);
-    
-    if (!orderId) {
-        console.error('❌ No order ID provided');
-        return { success: false, error: 'No order ID provided' };
-    }
-    
     try {
         const { data, error } = await supabaseClient
             .from('orders')
@@ -108,15 +96,13 @@ async function updateOrderStatus(orderId, newStatus) {
             .select();
 
         if (error) {
-            console.error('❌ Supabase update error:', error);
+            console.error('❌ Error:', error);
             return { success: false, error: error };
         }
 
-        console.log('✅ Order status updated to:', newStatus);
-        console.log('✅ Updated data:', data);
         return { success: true, data: data };
     } catch (error) {
-        console.error('❌ Exception in updateOrderStatus:', error);
+        console.error('❌ Exception:', error);
         return { success: false, error: error };
     }
 }

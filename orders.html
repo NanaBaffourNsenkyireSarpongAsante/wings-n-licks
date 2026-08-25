@@ -4,25 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order - WINGS "N" LICKS</title>
-    
-    <!-- ===== PAYSTACK SCRIPT - MUST LOAD FIRST ===== -->
     <script src="https://js.paystack.co/v1/inline.js"></script>
-    
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="orders.css">
 </head>
 <body>
 
-    <!-- BLOBS -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
@@ -30,7 +21,7 @@
     <!-- HEADER -->
     <header>
         <a href="index.html" class="logo">
-            <span class="logo-icon">🪽</span>
+            <span class="logo-icon">🔥</span>
             <span class="logo-text">WINGS "N" LICKS</span>
             <span class="logo-sub">| SPICY. CRISPY. ADDICTIVE.</span>
         </a>
@@ -41,9 +32,8 @@
             <li><a href="index.html#features">Features</a></li>
             <li><a href="index.html#contact">Contact</a></li>
             <li><a href="orders.html" class="nav-order-btn"><i class="fas fa-utensils"></i> Order Now</a></li>
+            <li><a href="admin.html"><i class="fas fa-user-shield"></i> Admin</a></li>
         </ul>
-             <li><a href="admin.html"><i class="fas fa-user-shield"></i> Admin</a></li>
-</ul>
         <button class="mobile-menu-btn" onclick="toggleMenu()">
             <i class="fas fa-bars"></i>
         </button>
@@ -63,9 +53,7 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-tag"><i class="fas fa-fire"></i> Place Your Order</span>
-                <h2 class="section-title">
-                    What's <span class="highlight">Cooking</span>?
-                </h2>
+                <h2 class="section-title">What's <span class="highlight">Cooking</span>?</h2>
                 <p class="section-subtitle">Choose your favorites and we'll deliver them hot and fresh</p>
             </div>
 
@@ -79,9 +67,7 @@
 
             <!-- Menu -->
             <div class="menu-section" id="menuSection">
-                <div class="menu-categories">
-                    <!-- Rendered by JavaScript -->
-                </div>
+                <div class="menu-categories"></div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
 
@@ -182,7 +168,7 @@
     <footer>
         <div class="footer-grid">
             <div class="footer-col">
-                <h4>🪽 <span class="highlight">WINGS "N" LICKS</span></h4>
+                <h4><span class="highlight">WINGS "N" LICKS</span></h4>
                 <p>Spicy. Crispy. Addictive.</p>
                 <p style="font-size:0.8rem;color:#666;">Every bite hits different.</p>
                 <div class="footer-social">
@@ -218,11 +204,7 @@
         </div>
     </footer>
 
-     <!-- Paystack -->
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-
-    <!-- Supabase -->
-
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase.js"></script>
     <script src="script.js"></script>

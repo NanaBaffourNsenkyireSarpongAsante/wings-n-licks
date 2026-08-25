@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - WINGS "N" LICKS</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="orders.css">
+</head>
+<body>
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <header>
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🔥</span>
+            <span class="logo-text">WINGS "N" LICKS</span>
+            <span class="logo-sub">| SPICY. CRISPY. ADDICTIVE.</span>
+        </a>
+        <ul class="nav-links" id="navLinks">
+            <div class="nav-indicator"></div>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#menu">Menu</a></li>
+            <li><a href="index.html#features">Features</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
+            <li><a href="orders.html" class="nav-order-btn"><i class="fas fa-utensils"></i> Order Now</a></li>
+        </ul>
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <section class="order-page">
+        <div class="container">
+            <div class="section-header" style="margin-bottom:2rem;">
+                <span class="section-tag"><i class="fas fa-shopping-cart"></i> Your Cart</span>
+                <h2 class="section-title">Review & <span class="highlight">Checkout</span></h2>
+                <p class="section-subtitle">Check your order, confirm the total, and complete payment.</p>
+            </div>
+
+            <div class="checkout-layout">
+                <div class="cart-section premium-card" style="display:block;">
+                    <div class="cart-section-header">
+                        <h3><i class="fas fa-shopping-cart"></i> Your Cart</h3>
+                        <a href="orders.html" class="close-cart-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;"> <i class="fas fa-arrow-left"></i> </a>
+                    </div>
+                    <div class="cart-items" id="cartItems">
+                        <p class="empty-cart">Your cart is empty. Add some delicious food!</p>
+                    </div>
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <span class="total-amount" id="cartTotal">GH₵ 0.00</span>
+                    </div>
+                    <button class="btn btn-primary" id="checkoutBtn" disabled>
+                        <i class="fas fa-arrow-right"></i> Proceed to Payment
+                    </button>
+                </div>
+
+                <div class="payment-section premium-card active" id="paymentSection">
+                    <div class="payment-header">
+                        <span class="payment-kicker">Secure Checkout</span>
+                        <h3><i class="fas fa-credit-card"></i> Make Payment</h3>
+                    </div>
+                    <form id="paymentForm">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="customerName" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="customerPhone" placeholder="e.g., 0593952002" required>
+                            <small>We'll send confirmation to this number</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Delivery Location</label>
+                            <select id="deliveryLocation" required>
+                                <option value="">Select your location</option>
+                                <option value="Bomso">Bomso (GHC 5)</option>
+                                <option value="KNUST">KNUST Campus (GHC 15)</option>
+                                <option value="Other">Other (Specify below)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="otherLocationGroup" style="display:none;">
+                            <label>Specify Location</label>
+                            <input type="text" id="otherLocation" placeholder="Enter your location">
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <div class="payment-methods">
+                                <div class="payment-method selected" data-method="mtn">
+                                    <input type="radio" name="paymentMethod" id="mtn" value="mtn" checked>
+                                    <label for="mtn"><i class="fas fa-mobile-alt" style="color:#FFCC00;"></i> MTN MoMo</label>
+                                </div>
+                                <div class="payment-method" data-method="vodafone">
+                                    <input type="radio" name="paymentMethod" id="vodafone" value="vodafone">
+                                    <label for="vodafone"><i class="fas fa-mobile-alt" style="color:#ED1C24;"></i> Vodafone Cash</label>
+                                </div>
+                                <div class="payment-method" data-method="cash">
+                                    <input type="radio" name="paymentMethod" id="cash" value="cash">
+                                    <label for="cash"><i class="fas fa-money-bill-wave" style="color:#28A745;"></i> Cash on Delivery</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" id="momoGroup">
+                            <label>Mobile Money Number</label>
+                            <input type="tel" id="momoNumber" placeholder="e.g., 0593952002">
+                        </div>
+                        <button type="submit" class="btn btn-primary payment-submit">
+                            <i class="fas fa-check-circle"></i> Place Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="confirmation-section" id="confirmationSection">
+                <div class="confirmation-card">
+                    <i class="fas fa-clock confirmation-icon" style="color:#FFD700;"></i>
+                    <h2>Order Received! ⏳</h2>
+                    <p>Your order has been received. Please complete payment on your phone.</p>
+                    <div class="order-details" id="orderDetails"></div>
+                    <div class="confirmation-actions">
+                        <a href="index.html" class="btn btn-primary"><i class="fas fa-home"></i> Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4><span class="highlight">WINGS "N" LICKS</span></h4>
+                <p>Spicy. Crispy. Addictive.</p>
+                <div class="footer-social">
+                    <a href="https://www.tiktok.com/@Wings_nlicks" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.snapchat.com/add/wings_nlicks" target="_blank" title="Snapchat"><i class="fab fa-snapchat"></i></a>
+                    <a href="mailto:wingsnlicks@gmail.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wa.me/233593952002" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <a href="index.html">Home</a>
+                <a href="index.html#menu">Menu</a>
+                <a href="orders.html">Order Now</a>
+                <a href="index.html#contact">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <p><i class="fas fa-phone" style="color:var(--primary);width:20px;"></i> +233 593 952 002</p>
+                <p><i class="fab fa-whatsapp" style="color:#25D366;width:20px;"></i> 059 395 2002</p>
+                <p><i class="fas fa-envelope" style="color:var(--secondary);width:20px;"></i> wingsnlicks@gmail.com</p>
+            </div>
+            <div class="footer-col">
+                <h4>Hours</h4>
+                <p>Mon - Sun: 11am - 11pm</p>
+                <p>Delivery: 20-25 min</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 WINGS "N" LICKS. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+    <script src="orders.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const deliverySelect = document.getElementById('deliveryLocation');
+            const totalEl = document.getElementById('cartTotal');
+
+            function syncCartUI() {
+                if (!Array.isArray(cart)) {
+                    cart = readCartFromStorage();
+                }
+
+                const itemsEl = document.getElementById('cartItems');
+                const checkoutBtn = document.getElementById('checkoutBtn');
+
+                if (!cart.length) {
+                    if (itemsEl) itemsEl.innerHTML = '<p class="empty-cart">Your cart is empty. Add some delicious food!</p>';
+                    if (totalEl) totalEl.textContent = 'GH₵ 0.00';
+                    if (checkoutBtn) checkoutBtn.disabled = true;
+                    return;
+                }
+
+                if (itemsEl) {
+                    itemsEl.innerHTML = cart.map(item => `
+                        <div class="cart-item">
+                            <div>
+                                <strong style="color:var(--white);">${item.name}</strong>
+                                <span style="color:var(--primary);margin-left:1rem;">GH₵ ${item.price} × ${item.quantity}</span>
+                            </div>
+                            <div>
+                                <span style="font-weight:700;color:var(--secondary);margin-right:1rem;">GH₵ ${(item.price * item.quantity).toFixed(2)}</span>
+                                <button class="cart-item-remove" onclick="removeFromCart(${item.id})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                const selectedLocation = deliverySelect ? deliverySelect.value : '';
+                const total = getCartTotal(selectedLocation);
+                if (totalEl) totalEl.textContent = `GH₵ ${total.toFixed(2)}`;
+                if (checkoutBtn) checkoutBtn.disabled = false;
+            }
+
+            if (deliverySelect) {
+                deliverySelect.addEventListener('change', function() {
+                    const otherGroup = document.getElementById('otherLocationGroup');
+                    if (otherGroup) otherGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+                    syncCartUI();
+                });
+            }
+
+            syncCartUI();
+        });
+    </script>
+</body>
+</html>

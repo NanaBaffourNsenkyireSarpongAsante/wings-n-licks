@@ -1,126 +1,90 @@
 // ============================================
-// MENU DATA - WINGS "N" LICKS
+// CART PERSISTENCE
 // ============================================
-const menuItems = [
-    // Combo Meals
-    {
-        id: 1,
-        name: "Combo 4",
-        description: "Fried Rice + 4 Spicy Chicken Wings",
-        price: 80.00,
-        category: "combo",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    },
-    {
-        id: 2,
-        name: "Combo 6",
-        description: "Fried Rice + 6 Spicy Chicken Wings",
-        price: 100.00,
-        category: "combo",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    },
-    {
-        id: 3,
-        name: "Combo 8",
-        description: "Fried Rice + 8 Spicy Chicken Wings",
-        price: 120.00,
-        category: "combo",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: null
-    },
-    // Regular Meals
-    {
-        id: 4,
-        name: "Fried Rice Only",
-        description: "Classic fried rice, perfectly seasoned",
-        price: 40.00,
-        category: "regular",
-        image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80",
-        tag: null
-    },
-    {
-        id: 5,
-        name: "4 Spicy Wings",
-        description: "4 signature spicy chicken wings",
-        price: 40.00,
-        category: "regular",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    },
-    {
-        id: 6,
-        name: "6 Spicy Wings",
-        description: "6 signature spicy chicken wings",
-        price: 60.00,
-        category: "regular",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    },
-    {
-        id: 7,
-        name: "10 Spicy Wings",
-        description: "10 signature spicy chicken wings",
-        price: 100.00,
-        category: "regular",
-        image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=600&q=80",
-        tag: null
-    },
-    // Spicy Fries + Wings
-    {
-        id: 8,
-        name: "Fries + 5 Wings + Zinger Dip",
-        description: "Crispy fries with 5 wings and zinger dip",
-        price: 75.00,
-        category: "fries",
-        image: "https://images.unsplash.com/photo-1630384900428-0c8bc9b0d5b4?auto=format&fit=crop&w=600&q=80",
-        tag: null
-    },
-    {
-        id: 9,
-        name: "Fries + 5 Wings + Zinger Dip + Coke",
-        description: "Crispy fries, 5 wings, zinger dip, and Coca-Cola",
-        price: 85.00,
-        category: "fries",
-        image: "https://images.unsplash.com/photo-1630384900428-0c8bc9b0d5b4?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    },
-    // Baddie Box
-    {
-        id: 10,
-        name: "Baddie Box",
-        description: "Fries + Fried Rice + 6 Wings + Coke + Zinger Dip + Hot Sauce",
-        price: 120.00,
-        category: "baddie",
-        image: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=600&q=80",
-        tag: "new"
-    },
-    // Big Brown Bucket
-    {
-        id: 11,
-        name: "Big Brown Bucket",
-        description: "Fried Rice + Fries + 8 Wings + Coke + Zinger Dip + Hot Sauce",
-        price: 180.00,
-        category: "bucket",
-        image: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=600&q=80",
-        tag: "popular"
-    }
-];
+const CART_STORAGE_KEY = 'wings_nlicks_cart';
+const DELIVERY_FEES = {
+    Bomso: 5,
+    KNUST: 15,
+    Other: 20
+};
 
 let cart = [];
+let menuItems = [];
+
+function readCartFromStorage() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+        console.error('Cart read error:', error);
+        return [];
+    }
+}
+
+function saveCartToStorage() {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+}
+
+function getCartSubtotal() {
+    return cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity || 0)), 0);
+}
+
+function getDeliveryFee(location = '') {
+    return DELIVERY_FEES[location] ?? 0;
+}
+
+function getCartTotal(location = '') {
+    return getCartSubtotal() + getDeliveryFee(location);
+}
+
+cart = readCartFromStorage();
 
 // ============================================
-// PAYSTACK CONFIGURATION
+// PAYSTACK CONFIGURATION - LIVE MODE
 // ============================================
-const PAYSTACK_PUBLIC_KEY = 'pk_test_baa82c3cfd66cfdb794bb00f7f7ae57c1227bcfc';
+const PAYSTACK_PUBLIC_KEY = 'pk_live_800c0844901ba45e4336b59ed87c';
 const PAYSTACK_SUBACCOUNT = 'ACCT_kvhbszzru33dnf2';
+
+// ============================================
+// FETCH MENU FROM SUPABASE
+// ============================================
+async function loadMenuFromDatabase() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('menu_items')
+            .select('*')
+            .eq('available', true)
+            .order('sort_order', { ascending: true });
+
+        if (error) {
+            console.error('❌ Error loading menu:', error);
+            return [];
+        }
+
+        console.log('✅ Menu loaded from database:', data?.length || 0, 'items');
+        return data || [];
+    } catch (error) {
+        console.error('❌ Error:', error);
+        return [];
+    }
+}
 
 // ============================================
 // RENDER MENU
 // ============================================
 function renderMenu(category = 'all') {
     const grid = document.getElementById('menuGrid');
+    
+    if (!grid) {
+        console.warn('⚠️ menuGrid not found');
+        return;
+    }
+    
+    if (!menuItems || menuItems.length === 0) {
+        grid.innerHTML = `<p class="empty-cart" style="color:var(--gray);text-align:center;padding:3rem;">Loading menu...</p>`;
+        return;
+    }
+
     const filtered = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
 
     if (filtered.length === 0) {
@@ -129,25 +93,26 @@ function renderMenu(category = 'all') {
     }
 
     grid.innerHTML = filtered.map(item => {
+        const itemId = JSON.stringify(item.id).replace(/"/g, '&quot;');
         const cartItem = cart.find(i => i.id === item.id);
         const qty = cartItem ? cartItem.quantity : 0;
         const isAdded = cartItem ? true : false;
         
         return `
         <div class="menu-item">
-            <img src="${item.image}" class="menu-item-image" onerror="this.src='https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Wings'">
+            <img src="${item.image || 'https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'}" class="menu-item-image" onerror="this.src='https://via.placeholder.com/600x400/1A1A2E/FF6B35?text=Food'">
             <div class="menu-item-info">
                 ${item.tag ? `<span class="menu-item-tag tag-${item.tag}">${item.tag === 'popular' ? '🔥 Popular' : '✨ New'}</span>` : ''}
                 <h4 class="menu-item-name">${item.name}</h4>
-                <p class="menu-item-description">${item.description}</p>
+                <p class="menu-item-description">${item.description || ''}</p>
                 <p class="menu-item-price">GH₵ ${item.price.toFixed(2)}</p>
                 <div class="menu-item-actions">
                     <div class="quantity-control">
-                        <button class="quantity-btn" onclick="changeQty(${item.id}, -1)">−</button>
+                        <button class="quantity-btn" onclick="changeQty(${itemId}, -1)">−</button>
                         <span class="quantity-value" id="qty-${item.id}">${qty}</span>
-                        <button class="quantity-btn" onclick="changeQty(${item.id}, 1)">+</button>
+                        <button class="quantity-btn" onclick="changeQty(${itemId}, 1)">+</button>
                     </div>
-                    <button class="add-to-cart" onclick="addToCart(${item.id})" id="addBtn-${item.id}">
+                    <button class="add-to-cart" onclick="addToCart(${itemId})" id="addBtn-${item.id}">
                         ${isAdded ? '<i class="fas fa-check"></i> Added' : '<i class="fas fa-plus"></i> Add'}
                     </button>
                 </div>
@@ -227,6 +192,7 @@ function addToCart(id) {
             btn.innerHTML = '<i class="fas fa-plus"></i> Add';
             btn.style.background = '';
         }
+        saveCartToStorage();
         updateCartUI();
         return;
     }
@@ -247,6 +213,7 @@ function addToCart(id) {
         btn.style.background = 'var(--fresh)';
     }
 
+    saveCartToStorage();
     updateCartUI();
     showNotification(`${item.name} added to cart!`);
 }
@@ -260,8 +227,9 @@ function updateCartUI() {
     const checkoutBtn = document.getElementById('checkoutBtn');
     const floatingCart = document.getElementById('floatingCart');
     const badge = document.getElementById('cartBadge');
+    const locationSelect = document.getElementById('deliveryLocation');
 
-    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+    const totalItems = cart.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
 
     if (cart.length === 0) {
         if (itemsEl) itemsEl.innerHTML = '<p class="empty-cart">Your cart is empty. Add some delicious food!</p>';
@@ -270,6 +238,8 @@ function updateCartUI() {
         if (floatingCart) floatingCart.style.display = 'none';
         return;
     }
+
+    saveCartToStorage();
 
     if (floatingCart) {
         floatingCart.style.display = 'block';
@@ -295,7 +265,9 @@ function updateCartUI() {
         `).join('');
     }
 
-    const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const subtotal = getCartSubtotal();
+    const selectedLocation = locationSelect ? locationSelect.value : '';
+    const total = getCartTotal(selectedLocation);
     if (totalEl) totalEl.textContent = `GH₵ ${total.toFixed(2)}`;
     if (checkoutBtn) checkoutBtn.disabled = false;
 }
@@ -305,6 +277,7 @@ function updateCartUI() {
 // ============================================
 function removeFromCart(id) {
     cart = cart.filter(item => item.id !== id);
+    saveCartToStorage();
     const qtyEl = document.getElementById(`qty-${id}`);
     if (qtyEl) qtyEl.textContent = '0';
     const btn = document.getElementById(`addBtn-${id}`);
@@ -323,21 +296,8 @@ function goToCart() {
         showNotification('Your cart is empty! Add some items first.');
         return;
     }
-    
-    const cartSection = document.getElementById('cartSection');
-    const steps = document.querySelectorAll('.step');
-    
-    if (cartSection) cartSection.style.display = 'block';
-    
-    steps.forEach((el, index) => {
-        if (index === 1) {
-            el.classList.add('active');
-        }
-    });
-    
-    if (cartSection) {
-        cartSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+
+    window.location.href = 'cart.html';
 }
 
 // ============================================
@@ -401,7 +361,9 @@ document.querySelectorAll('.payment-method')?.forEach(el => {
 });
 
 document.getElementById('deliveryLocation')?.addEventListener('change', function() {
-    document.getElementById('otherLocationGroup').style.display = this.value === 'Other' ? 'block' : 'none';
+    const otherLocationGroup = document.getElementById('otherLocationGroup');
+    if (otherLocationGroup) otherLocationGroup.style.display = this.value === 'Other' ? 'block' : 'none';
+    updateCartUI();
 });
 
 // ============================================
@@ -431,6 +393,8 @@ Location: ${orderData.customer.location}
 📋 ORDER SUMMARY:
 ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
 ━━━━━━━━━━━━━━━━━━━━━
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
 
 💰 Payment confirmed!
@@ -449,6 +413,8 @@ Location: ${orderData.customer.location}
 📋 ORDER SUMMARY:
 ${orderData.items.map(item => `  • ${item.name} × ${item.quantity} = GH₵ ${(item.price * item.quantity).toFixed(2)}`).join('\n')}
 ━━━━━━━━━━━━━━━━━━━━━
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
 
 💳 Payment: ${orderData.payment.method.toUpperCase()}
@@ -468,6 +434,8 @@ Phone: ${orderData.customer.phone}
 Location: ${orderData.customer.location}
 
 💰 Payment confirmed!
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
 
 📋 ITEMS:
@@ -485,6 +453,8 @@ Location: ${orderData.customer.location}
 
 💳 Payment: ${orderData.payment.method.toUpperCase()}
 ${orderData.payment.method !== 'cash' ? `📱 MoMo Number: ${orderData.payment.momoNumber}` : '💵 Cash on Delivery'}
+Subtotal: GH₵ ${getCartSubtotal().toFixed(2)}
+Delivery: GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}
 Total: GH₵ ${orderData.total.toFixed(2)}
 
 📋 ITEMS:
@@ -519,6 +489,8 @@ function showOrderConfirmation(orderData, paymentStatus = 'pending') {
         <p><strong>Phone:</strong> ${orderData.customer.phone}</p>
         <p><strong>Location:</strong> ${orderData.customer.location}</p>
         <p><strong>Payment:</strong> ${orderData.payment.method.toUpperCase()}</p>
+        <p><strong>Subtotal:</strong> GH₵ ${getCartSubtotal().toFixed(2)}</p>
+        <p><strong>Delivery:</strong> GH₵ ${getDeliveryFee(orderData.customer.location).toFixed(2)}</p>
         <p><strong>Total:</strong> <span style="color:var(--secondary);font-size:1.2rem;">GH₵ ${orderData.total.toFixed(2)}</span></p>
         <hr>
         <p><strong>Items Ordered:</strong></p>
@@ -558,7 +530,6 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
     const method = document.querySelector('input[name="paymentMethod"]:checked');
     const momo = document.getElementById('momoNumber').value.trim();
 
-    // Validate
     if (!name || !phone || !location) {
         alert('Please fill in all required fields.');
         return;
@@ -569,8 +540,8 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         return;
     }
 
-    // Calculate total
-    const total = cart.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+    const deliveryFee = getDeliveryFee(location === 'Other' ? 'Other' : location);
+    const total = getCartTotal(location === 'Other' ? 'Other' : location);
     const ref = generateOrderReference();
 
     const orderData = {
@@ -586,6 +557,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
             price: i.price 
         })),
         total: total,
+        deliveryFee: deliveryFee,
         payment: { 
             method: method ? method.value : 'mtn', 
             momoNumber: method && method.value === 'cash' ? 'Cash on Delivery' : momo
@@ -593,13 +565,12 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         time: new Date().toLocaleString()
     };
 
-    // Validate MoMo number for non-cash payments
     if (method && method.value !== 'cash' && (!momo || momo.length < 10)) {
         alert('Please enter a valid Mobile Money number (10 digits).');
         return;
     }
 
-    // If Cash on Delivery, process directly
+    // Cash on Delivery
     if (method && method.value === 'cash') {
         const submitBtn = document.querySelector('.payment-submit');
         const originalText = submitBtn.innerHTML;
@@ -614,6 +585,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
             showOrderConfirmation(orderData, 'pending');
             
             cart = [];
+            saveCartToStorage();
             updateCartUI();
 
             submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Order Placed!';
@@ -632,31 +604,23 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
         return;
     }
 
-    // ============================================
-    // PAYSTACK PAYMENT (MoMo)
-    // ============================================
+    // MoMo Payment
     const submitBtn = document.querySelector('.payment-submit');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     submitBtn.disabled = true;
 
     try {
-        // Save order to Supabase first
         const result = await saveOrderToSupabase(orderData);
+        if (!result.success) throw new Error('Failed to save order');
         
-        if (!result.success) {
-            throw new Error('Failed to save order');
-        }
-
-        // Send "Order Received" WhatsApp
+        const orderId = result.data[0].id;
         sendWhatsAppConfirmations(orderData, 'pending');
 
-        // Check if Paystack is available
         if (typeof PaystackPop === 'undefined') {
             throw new Error('Payment service not available. Please try Cash on Delivery.');
         }
 
-        // Open Paystack popup
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY,
             email: `${orderData.customer.name.replace(/\s/g, '').toLowerCase()}@customer.com`,
@@ -665,36 +629,22 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
             ref: orderData.reference,
             metadata: {
                 custom_fields: [
-                    {
-                        display_name: "Customer Name",
-                        variable_name: "customer_name",
-                        value: orderData.customer.name
-                    },
-                    {
-                        display_name: "Customer Phone",
-                        variable_name: "customer_phone",
-                        value: orderData.customer.phone
-                    },
-                    {
-                        display_name: "Location",
-                        variable_name: "location",
-                        value: orderData.customer.location
-                    }
+                    { display_name: "Customer Name", variable_name: "customer_name", value: orderData.customer.name },
+                    { display_name: "Customer Phone", variable_name: "customer_phone", value: orderData.customer.phone },
+                    { display_name: "Location", variable_name: "location", value: orderData.customer.location }
                 ]
             },
             subaccount: PAYSTACK_SUBACCOUNT,
             channels: ['mobile_money'],
             callback: function(response) {
                 console.log('✅ Paystack callback:', response);
-                
-                // Update order status
-                updateOrderStatus(result.data[0].id, 'payment_received')
+                updateOrderStatus(orderId, 'payment_received')
                     .then(() => {
                         sendWhatsAppConfirmations(orderData, 'paid');
                         showOrderConfirmation(orderData, 'paid');
                         cart = [];
+                        saveCartToStorage();
                         updateCartUI();
-
                         submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
                         submitBtn.style.background = 'var(--fresh)';
                         setTimeout(() => {
@@ -703,9 +653,7 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
                             submitBtn.style.background = '';
                         }, 3000);
                     })
-                    .catch((err) => {
-                        console.error('❌ Error updating order:', err);
-                    });
+                    .catch((err) => console.error('❌ Error updating order:', err));
             },
             onClose: function() {
                 console.log('⚠️ Paystack popup closed');
@@ -727,8 +675,19 @@ document.getElementById('paymentForm')?.addEventListener('submit', async functio
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🔵 Initializing orders page...');
+    
     renderCategories();
+    
+    // Load menu from database
+    const items = await loadMenuFromDatabase();
+    if (items.length > 0) {
+        menuItems = items;
+    } else {
+        console.warn('⚠️ No menu items found, using fallback data');
+    }
+    
     renderMenu();
     updateCartUI();
     
